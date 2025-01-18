@@ -214,7 +214,8 @@ def train():
     text_encoder.resize_token_embeddings(len(tokenizer))
 
     if args.initialize_tokens is not None:
-        initialize_embeds=token_cross_init(args.initialize_tokens,tokenizer,text_encoder)
+        # hack here to run textual inversion by setting return_first_embeds=True
+        initialize_embeds=token_cross_init(args.initialize_tokens,tokenizer,text_encoder, return_first_embeds=True)
         assert initialize_embeds.shape[0]==args.n_persudo_tokens,"The number of `initialize_tokens` is not equal to `n_persudo_tokens`"
     else:
         initialize_embeds=celeb_names_cross_init(args.celeb_path,tokenizer,text_encoder,args.n_persudo_tokens)
@@ -222,6 +223,9 @@ def train():
     
     text_encoder.get_input_embeddings().weight.data[placeholder_token_ids]=initialize_embeds
     initialize_embeds=initialize_embeds.clone().detach().to(accelerator.device)
+
+    # save_path = os.path.join(args.output_dir, f"initial.bin")
+    # save_progress(text_encoder, placeholder_tokens, placeholder_token_ids, accelerator, args, save_path)
 
     # Freeze vae and unet
     vae.requires_grad_(False)

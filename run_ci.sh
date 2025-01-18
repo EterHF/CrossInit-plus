@@ -1,22 +1,3 @@
-<<<<<<< HEAD
-export LD_PRELOAD="/home/node-user/anaconda3/envs/ci/lib/python3.10/site-packages/nvidia/nvjitlink/lib/libnvJitLink.so.12"
-# export CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7
-
-base_dir="/home/node-user/traffic/yemao/CrossInit/CelebAMask-HQ/CelebA-HQ-img"  # 替换为实际路径
-n=5
-counter=0
-
-# 遍历每个文件夹
-for folder in "$base_dir"/*; do
-    # 确保只处理文件夹
-    if [ -d "$folder" ]; then
-        # 获取文件夹的名称（即ID）
-        folder_name=$(basename "$folder")
-
-        # 设置 train_data_dir 和 output_dir
-        train_data_dir="$folder"
-        output_dir="./results/$folder_name"
-=======
 # export LD_PRELOAD="/home/node-user/anaconda3/envs/ci/lib/python3.10/site-packages/nvidia/nvjitlink/lib/libnvJitLink.so.12"
 export CUDA_VISIBLE_DEVICES=$3
 
@@ -39,8 +20,7 @@ for (( i=lb; i<ub; i++ )); do
         # 设置 train_data_dir 和 output_dir
         train_data_dir="$folder"
         output_dir="./results/$i"
->>>>>>> 79e2ed2ca6 (	new file:   add_folder.py)
-
+        
         # 创建 output_dir 文件夹（如果不存在）
         mkdir -p "$output_dir"
 
@@ -52,11 +32,7 @@ for (( i=lb; i<ub; i++ )); do
         python train_cross_init.py \
             --save_steps 500 \
             --only_save_embeds \
-<<<<<<< HEAD
-            --pretrained_model_name_or_path "/home/node-user/traffic/yemao/CrossInit/stable-diffusion-2-1-base" \
-=======
             --pretrained_model_name_or_path "stabilityai/stable-diffusion-2-1-base" \
->>>>>>> 79e2ed2ca6 (	new file:   add_folder.py)
             --train_data_dir "$train_data_dir" \
             --placeholder_token "<sks>" \
             --celeb_path "./examples/wiki_names_v2.txt" \
@@ -67,28 +43,12 @@ for (( i=lb; i<ub; i++ )); do
             --logging_dir "logs" \
             --train_batch_size 8 \
             --max_train_steps 320 \
-<<<<<<< HEAD
-            --learning_rate 0.000625 \ 
-=======
             --learning_rate 0.000625 \
->>>>>>> 79e2ed2ca6 (	new file:   add_folder.py)
             --scale_lr \
             --validation_prompt_file "prompts.txt" \
             --num_validation_images 4 \
             --validation_steps 320
 
         echo "Training for $folder_name completed."
-<<<<<<< HEAD
-
-        # 增加计数器
-        ((counter++))
-
-        # 如果已处理文件夹数量达到n，则退出循环
-        if [ "$counter" -ge "$n" ]; then
-            echo "Processed $n folders, stopping."
-            break
-        fi
-=======
->>>>>>> 79e2ed2ca6 (	new file:   add_folder.py)
     fi
 done

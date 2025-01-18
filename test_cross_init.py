@@ -19,8 +19,6 @@ def infer(
 ):
     tokenizer = CLIPTokenizer.from_pretrained(pretrained_model_name_or_path, subfolder="tokenizer",torch_dtype=torch.float16)
     text_encoder = CLIPTextModel.from_pretrained(pretrained_model_name_or_path, subfolder="text_encoder",torch_dtype=torch.float16).to(device)
-
-    if learned_embed_name_or_path is None:
         
     embeds_dict=torch.load(learned_embed_name_or_path)
     tokens=list(embeds_dict.keys())
@@ -42,25 +40,13 @@ def infer(
         ).to(device)
     pipe.scheduler = DPMSolverMultistepScheduler.from_config(pipe.scheduler.config)
 
-    # Track the embeddings at each layer
-    init_embeddings = embeds # To store the initial embeddings
-    learned_embeddings = []  # To store the learned embeddings
-
-    # Hook to capture the output of each block of the text encoder
-    def hook_fn(module, input, output):
-        learned_embeddings.append(output.detach().cpu())  # Capture learned embedding
-
-    # Register hooks for each block in the text encoder
-    for block in text_encoder.encoder.blocks:
-        block.attention.self.register_forward_hook(hook_fn)
-
     images = pipe(
         prompt,
         generator=generator,
         num_images_per_prompt=n_images,
         num_inference_steps=num_inference_steps
     ).images
-    return images, init_embeddings, learned_embeddings
+    return images #, init_embeddings, learned_embeddings
 
 
 def parse_args(input_args=None):
@@ -145,46 +131,6 @@ def parse_args(input_args=None):
         Path(args.save_dir).mkdir(parents=True,exist_ok=True)
 
     return args
-
-def stat(init_embeddings, learned_embeddings):
-    # Convert embeddings to numpy arrays for plotting
-    init_embeddings = np.array([embedding.mean(dim=1).numpy() for embedding in init_embeddings])  # mean across tokens
-    learned_embeddings = np.array([embedding.mean(dim=1).numpy() for embedding in learned_embeddings])  # mean across tokens
-    
-    # Calculate L2 norm for each layer
-    l2_norm_init = np.linalg.norm(init_embeddings, axis=1)
-    l2_norm_learned = np.linalg.norm(learned_embeddings, axis=1)
-    
-    # Calculate cosine similarity between initial and learned embeddings at each block
-
-    def cosine_similarity(A, B):
-        dot_product = np.dot(A, B)
-        norm_A = np.linalg.norm(A)
-        norm_B = np.linalg.norm(B)
-        return dot_product / (norm_A * norm_B)
-    cosine_sim = cosine_similarity(init_embeddings, learned_embeddings)
-
-    # Plot the L2 norm
-    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 5))
-    
-    # L2 norm plot (left)
-    ax1.plot(l2_norm_init, label="L2 norm of $v_k^{\text{init}}$", color='orange')
-    ax1.plot(l2_norm_learned, label="L2 norm of $v_k^{\text{learned}}$", color='blue')
-    ax1.set_xlabel("Block")
-    ax1.set_ylabel("L2 Norm")
-    ax1.set_title("L2 Norm of Initial and Learned Embeddings")
-    ax1.legend()
-
-    # Cosine similarity plot (right)
-    ax2.plot(cosine_sim, label="Cosine similarity", color='green')
-    ax2.set_xlabel("Block")
-    ax2.set_ylabel("Cosine Similarity")
-    ax2.set_title("Cosine Similarity between Initial and Learned Embeddings")
-    ax2.legend()
-
-    # Show the plots
-    plt.tight_layout()
-    plt.show()
 
 
 if __name__ == '__main__':
