@@ -1,9 +1,45 @@
-## README
+# README
 
-### Directory Structure
+## Environment
+In this project, we use ```python 3.10``` conda virtual environment. Note that you may choose the ```torch``` version as long as it has no warnings.
+```
+conda create -n ci python=3.10
+conda activate ci
+pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu121
+pip install -r requirements.txt
+```
+## Dataset
+We use ```Celeb-HQ``` dataset, which can be downloaded [here](https://drive.google.com/file/d/1badu11NqxGf6qM3PTTooQDJvQbejgbTv/view). To align with the dataloader, please run ```add_folder.py``` (change the dataset path to your own).
+```
+python add_folder.py /path/to/CelebAMask-HQ/CelebA-HQ-img
+```
+For the generalization to synthesizing dog images, we use the training set of a dataset from kaggle, which is located in folder `examples`, including folder `examples/dog_dataset` containing over 10000 photos and file `examples/labels.csv` containing the labels of these images. We also provide a few example files in  folder `examples/dogs`. You can run `examples/random_draw.py` to create a folder containing one photo for each name of dog breeds.
+The whole dog dataset is originally from [here](https://www.kaggle.com/c/dog-breed-identification/data).
 
-- **root**
+## Download pretrained weights
+To run evaluation, you need to download pretrained weights for face recognition model [here](https://disk.pku.edu.cn/link/AAAE31036C48B34ED4AF9679AE8AF0D00F). Move ```epoch59.pth``` and ```FaceBoxesV2.pth``` to ```evaluation/face_align/PIPNet/weights```. For ```net_sphere20_data_vggface2_acc_9955.pth```, move it under ```evaluation```.
+
+## Training
+
+### Train on single concept
+Specify the ```train_data_dir``` and ```output_dir``` in ```run_ci.sh```. You may also change other hyper-parameters as you like.
+```
+bash run_ci.sh
+```
+ps. We realize Textual Inversion using the same codes, run
+```
+bash run_ti.sh
+```
+
+### Train on dataset
+This is for subsequent evaluation. Specify the loop num in ```run_train.sh```. The loop num is equal to the gpu num you want to use. And you can specify the number of samples you want to run on each gpu.
+```
+bash run_train.sh
+```
+The resulting file follows the structure below:
+- **results**
   - **img_id**
+    - `initial_embedding.bin`
     - `learned_embeddings.bin`
     - `original_img.png`
     - **prompt1**
@@ -11,6 +47,54 @@
       - `prompt_without_ph.txt`
     - **prompt2**
       - ...
+
+Plus, if you want to train the model on these dog images, please do it as what original README of Cross Initialization says, except that you should set hyper-parameter `celeb_path` as `./examples/dogs/kaggle_dog_names_chosen.txt`
+For example, to train the dog in `examples/dogs/clumber`, you can run:
+```
+python train_cross_init.py \
+    --save_steps 100 \
+    --only_save_embeds \
+    --placeholder_token "<clumber>" \
+    --train_batch_size 8 \
+    --scale_lr \
+    --n_persudo_tokens 2 \
+    --reg_weight "1e-5" \
+    --learning_rate 0.000625 \
+    --max_train_step 320 \
+    --train_data_dir "./examples/dogs/clumber" \
+    --celeb_path "./examples/dogs/kaggle_dog_names_chosen.txt" \
+    --pretrained_model_name_or_path "stabilityai/stable-diffusion-2-1-base" \
+    --output_dir "./logs/dogs/clumber/learned_embeddings" 
+```
+
+## Evaluation
+The data to be evaluated needs to be the structure above, or you mey need to change codes in ```evaluation/base_class.py```
+```
+bash eval.sh
+```
+
+## Inference
+Specify the ```learned_embedding_path```, ```prompt``` and ```save_dir``` in ```inference.sh```. We provide the 20 prompts in the original peper in ```prompt.txt```. You may substitute ```prompt``` with ```prompt_file```.
+```
+bash inference.sh
+```
+For generating dog images, to run inference on a learned embedding, you can run:
+```
+python test_cross_init.py \
+    --pretrained_model_name_or_path "stabilityai/stable-diffusion-2-1-base" \
+    --num_inference_steps 50 \
+    --learned_embedding_path "./logs/dogs/clumber/learned_embeddings/learned_embeds.bin" \
+    --prompt "a photo of a {} dog" \
+    --save_dir "./logs/dogs/clumber/images" \
+    --num_images_per_prompt=8 \
+    --n_iter=1
+```
+
+## Visualization
+Due to time limitation, we only realize one type of visualization. Specify the ```init_path``` and ```learned_path``` to the paths of your initial and optimized embeddings, to see their behavior in the self-attention layer of the text encoder. The result is saved to the current dir as ```fig1.png```.
+```
+python _plot_.py --init_path /path/to/initial_embedding.bin --learned_path /path/to/learned_embeds.bin
+```
 
 ## Below are original README from https://github.com/lyuPang/CrossInitialization
 

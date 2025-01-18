@@ -1,27 +1,26 @@
 import os
 import shutil
+import argparse
 
-# 图片文件夹路径
-image_dir = "/home/node-user/traffic/yemao/CrossInit/CelebAMask-HQ/CelebA-HQ-img"  # 替换为实际路径
+def organize_images(image_dir):
+    image_files = [f for f in os.listdir(image_dir) if f.endswith('.jpg')]
 
-# 获取文件夹内所有jpg文件
-image_files = [f for f in os.listdir(image_dir) if f.endswith('.jpg')]
+    for image_file in image_files:
+        folder_name = os.path.splitext(image_file)[0]  # 去掉 '.jpg' 后缀
+        folder_path = os.path.join(image_dir, folder_name)
+        os.makedirs(folder_path, exist_ok=True)  # 创建文件夹（若不存在）
 
-# 遍历所有的图片文件
-for image_file in image_files:
-    # 提取文件名中的数字部分作为文件夹名
-    folder_name = os.path.splitext(image_file)[0]  # 去掉'.jpg'后缀
+        image_path = os.path.join(image_dir, image_file)
+        shutil.move(image_path, os.path.join(folder_path, image_file))  # 移动文件
 
-    # 创建新文件夹
-    folder_path = os.path.join(image_dir, folder_name)
-    os.makedirs(folder_path, exist_ok=True)
+        print(f"Moved {image_file} to {folder_path}")
 
-    # 构造图片的完整路径
-    image_path = os.path.join(image_dir, image_file)
+    print("All images have been moved to their respective folders.")
 
-    # 将图片移动到新文件夹中
-    shutil.move(image_path, os.path.join(folder_path, image_file))
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="Organize images into folders based on their filenames.")
+    parser.add_argument("image_dir", type=str, help="Path to the directory containing the images.", required=True)
 
-    print(f"Moved {image_file} to {folder_path}")
+    args = parser.parse_args()
 
-print("All images have been moved to their respective folders.")
+    organize_images(args.image_dir)

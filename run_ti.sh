@@ -1,8 +1,8 @@
 # export LD_PRELOAD="/home/node-user/anaconda3/envs/ci/lib/python3.10/site-packages/nvidia/nvjitlink/lib/libnvJitLink.so.12"
 export CUDA_VISIBLE_DEVICES=0
 python train_cross_init.py \
-    --save_steps 50000 \
-    --checkpointing_steps 50000 \
+    --save_steps 500 \
+    --checkpointing_steps 500 \
     --only_save_embeds \
     --pretrained_model_name_or_path "stabilityai/stable-diffusion-2-1-base"\
     --train_data_dir "./examples/input_images/28068" \
@@ -19,4 +19,4 @@ python train_cross_init.py \
     --scale_lr \
     --validation_prompt "a {} person and Anne Hathaway enjoying a day at an amusement park" \
     --num_validation_images 4 \
-    --validation_steps 50000 \
+    --validation_steps 500 \

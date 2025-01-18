@@ -224,8 +224,8 @@ def train():
     text_encoder.get_input_embeddings().weight.data[placeholder_token_ids]=initialize_embeds
     initialize_embeds=initialize_embeds.clone().detach().to(accelerator.device)
 
-    # save_path = os.path.join(args.output_dir, f"initial.bin")
-    # save_progress(text_encoder, placeholder_tokens, placeholder_token_ids, accelerator, args, save_path)
+    save_path = os.path.join(args.output_dir, f"initial_embedding.bin")
+    save_progress(text_encoder, placeholder_tokens, placeholder_token_ids, accelerator, args, save_path)
 
     # Freeze vae and unet
     vae.requires_grad_(False)

@@ -2,5 +2,6 @@ results/
 tmp/
 logs/
 __pycache__/
-net_sphere20_data_vggface2_acc_9955.pth
+evaluation/net_sphere20_data_vggface2_acc_9955.pth
 evaluation/face_align/PIPNet/weights/
+*.zip

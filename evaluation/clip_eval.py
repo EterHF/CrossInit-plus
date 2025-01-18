@@ -249,7 +249,7 @@ class IdentityEvaluator(object):
         # id_path = '/gavin/code/FaceSwapping/modules/third_party/arcface/weights/' \
         #           'ms1mv3_arcface_r100_fp16/backbone.pth'
         self.id_model = cosface.net.sphere().cuda()
-        id_path = '/home/node-user/traffic/yemao/CrossInit/MML-CrossInitialization/net_sphere20_data_vggface2_acc_9955.pth'
+        id_path = 'evaluation/net_sphere20_data_vggface2_acc_9955.pth'
 
         weights = torch.load(id_path)
         self.id_model.load_state_dict(weights)
